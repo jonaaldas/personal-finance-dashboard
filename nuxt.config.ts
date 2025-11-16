@@ -4,7 +4,7 @@ console.log(env);
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
-  modules: ["@nuxt/image", "@nuxt/ui"],
+  modules: ["@nuxt/image", "@nuxt/ui", "convex-nuxt"],
   vite: {
     plugins: [tailwindcss()],
   },
@@ -14,5 +14,10 @@ export default defineNuxtConfig({
   },
   convex: {
     url: env.CONVEX_URL,
+  },
+  runtimeConfig: {
+    public: {
+      DATASYNC_URL: env.DATASYNC_URL,
+    },
   },
 });

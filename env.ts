@@ -2,6 +2,7 @@ import { z } from "zod";
 
 const envSchema = z.object({
   CONVEX_URL: z.url(),
+  DATASYNC_URL: z.url(),
 });
 
 export const env = envSchema.parse(process.env);

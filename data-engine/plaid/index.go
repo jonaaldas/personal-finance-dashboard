@@ -270,12 +270,15 @@ func renderError(c *fiber.Ctx, originalErr error) {
 	})
 }
 
+var AMEX_TOKEN = "access-sandbox-75c0407c-d69e-41c5-bae5-cf82aa3bb6d7"
+
 func Accounts(c *fiber.Ctx) error {
 	ctx := context.Background()
 
 	accountsGetResp, _, err := client.PlaidApi.AccountsGet(ctx).AccountsGetRequest(
 		// *plaid.NewAccountsGetRequest(accessToken),
-		*plaid.NewAccountsGetRequest("access-sandbox-41aa2e07-3853-4287-8a1f-8664465aaeb2"),
+		// access-sandbox-3b63e2a9-1d22-4139-afd0-dda1b3bd07e8 -> USAA
+		*plaid.NewAccountsGetRequest(AMEX_TOKEN),
 	).Execute()
 
 	if err != nil {
@@ -295,7 +298,7 @@ func Liabilities(c *fiber.Ctx) error {
 	liabilitiesGetResp, _, err := client.PlaidApi.LiabilitiesGet(ctx).LiabilitiesGetRequest(
 		// *plaid.NewAccountsGetRequest(accessToken),
 		// access-sandbox-83f1ac58-dd31-4374-87f7-fd0c1e72eef4
-		*plaid.NewLiabilitiesGetRequest("access-sandbox-83f1ac58-dd31-4374-87f7-fd0c1e72eef4"),
+		*plaid.NewLiabilitiesGetRequest(AMEX_TOKEN),
 	).Execute()
 
 	if err != nil {
@@ -323,7 +326,7 @@ func Transactions(c *fiber.Ctx) error {
 	// Iterate through each page of new transaction updates for item
 	for hasMore {
 		// request := plaid.NewTransactionsSyncRequest(accessToken)
-		request := plaid.NewTransactionsSyncRequest("access-sandbox-41aa2e07-3853-4287-8a1f-8664465aaeb2")
+		request := plaid.NewTransactionsSyncRequest(AMEX_TOKEN)
 		if cursor != nil {
 			request.SetCursor(*cursor)
 		}

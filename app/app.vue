@@ -1,19 +1,21 @@
 <script setup lang="ts">
 import LinkButton from "./composables/link_button.vue";
-const DATA_ENGINE_URL = "http://localhost:5050";
+const {
+  public: { DATASYNC_URL },
+} = useRuntimeConfig();
 
 const getAccounts = async () => {
-  const res = await $fetch(`${DATA_ENGINE_URL}/api/accounts`);
+  const res = await $fetch(`${DATASYNC_URL}/api/accounts`);
   console.log(res);
 };
 
 const getLiabilities = async () => {
-  const res = await $fetch(`${DATA_ENGINE_URL}/api/liabilities`);
+  const res = await $fetch(`${DATASYNC_URL}/api/liabilities`);
   console.log(res);
 };
 
 const getTransactions = async () => {
-  const res = await $fetch(`${DATA_ENGINE_URL}/api/transactions`);
+  const res = await $fetch(`${DATASYNC_URL}/api/transactions`);
   console.log(res);
 };
 </script>
@@ -21,10 +23,7 @@ const getTransactions = async () => {
 <template>
   <UPage>
     <UContainer>
-      <LinkButton />
-      <UButton @click="getAccounts">Get Accounts</UButton>
-      <UButton @click="getLiabilities">Get Liabilities</UButton>
-      <UButton @click="getTransactions">Get Transactions</UButton>
+      <NuxtPage />
     </UContainer>
   </UPage>
 </template>

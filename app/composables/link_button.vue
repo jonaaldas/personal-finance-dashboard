@@ -1,5 +1,5 @@
 <template>
-  <UButton :disabled="!ready" @click="open">Connect a bank account</UButton>
+  <UButton @mouseover="getPublicToken" @click="open">Connect a bank account</UButton>
 </template>
 
 <script lang="ts" setup>
@@ -10,54 +10,54 @@ import type {
   PlaidLinkOptions,
 } from "@jcss/vue-plaid-link";
 import { usePlaidLink } from "@jcss/vue-plaid-link";
-const DATA_ENGINE_URL = "http://localhost:5050";
+import { api } from "../../convex/_generated/api";
+import { v } from "convex/values";
+const { mutate: saveAccessTokens, isPending: isSavingAccessTokens } = useConvexMutation(
+  api.functions.mutation.saveAccessTokens
+);
+
+const {
+  public: { DATASYNC_URL: DATA_ENGINE_URL },
+} = useRuntimeConfig();
+
 let linkToken: Ref<string> = ref("");
-try {
-  const { data } = useFetch<{ link_token: string }>(
-    `${DATA_ENGINE_URL}/api/create_link_token`,
-    {
+const getPublicToken = async () => {
+  try {
+    const data = await $fetch<{ link_token: string }>(`${DATA_ENGINE_URL}/api/create_link_token`, {
       method: "POST",
-    }
-  );
-  linkToken = computed(() => {
-    console.log(linkToken);
-    if (!data.value) {
-      return "";
-    }
-    return data.value.link_token;
-  });
-} catch (error) {
-  console.error("Error creating link token", error);
-}
+    });
+    linkToken = computed(() => data.link_token);
+  } catch (error) {
+    console.error("Error creating link token", error);
+  }
+};
 
 const onSuccess: PlaidLinkOnSuccess = async (publicToken, metadata) => {
   try {
-    const res = await $fetch(`${DATA_ENGINE_URL}/api/set_access_token`, {
-      method: "POST",
-      body: {
-        publicToken,
-      },
-    });
-    console.log("this is the token", res);
+    const res = await $fetch<{ access_token: string; item_id: string }>(
+      `${DATA_ENGINE_URL}/api/set_access_token`,
+      {
+        method: "POST",
+        body: {
+          publicToken,
+        },
+      }
+    );
+    saveAccessTokens({ access_token: res.access_token, item_id: res.item_id });
   } catch (error) {
     console.error("Error setting access token", error);
   }
 };
 
 const onEvent: PlaidLinkOnEvent = (eventName, metadata) => {
-  // log onEvent callbacks from Link
-  // https://plaid.com/docs/link/web/#onevent
   console.log(eventName, metadata);
 };
 
 const onExit: PlaidLinkOnExit = (error, metadata) => {
-  // log onExit callbacks from Link, handle errors
-  // https://plaid.com/docs/link/web/#onexit
-  console.log(error, metadata);
+  linkToken.value = "";
 };
 
 const config = computed(() => {
-  console.log("this is the token", linkToken.value);
   const config: PlaidLinkOptions = {
     token: linkToken.value,
     onSuccess,
