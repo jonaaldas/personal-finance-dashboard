@@ -11,6 +11,11 @@ const getLiabilities = async () => {
   const res = await $fetch(`${DATA_ENGINE_URL}/api/liabilities`);
   console.log(res);
 };
+
+const getTransactions = async () => {
+  const res = await $fetch(`${DATA_ENGINE_URL}/api/transactions`);
+  console.log(res);
+};
 </script>
 
 <template>
@@ -19,6 +24,7 @@ const getLiabilities = async () => {
       <LinkButton />
       <UButton @click="getAccounts">Get Accounts</UButton>
       <UButton @click="getLiabilities">Get Liabilities</UButton>
+      <UButton @click="getTransactions">Get Transactions</UButton>
     </UContainer>
   </UPage>
 </template>
