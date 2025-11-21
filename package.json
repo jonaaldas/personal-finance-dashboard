@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev",
+    "dev": "concurrently \"nuxt dev\" \"npx convex dev \" ",
     "start": "bun run .output/server/index.mjs",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
@@ -15,6 +15,7 @@
     "@nuxt/image": "2.0.0",
     "@nuxt/ui": "4.1.0",
     "@tailwindcss/vite": "^4.1.17",
+    "concurrently": "^9.2.1",
     "convex": "^1.29.0",
     "convex-nuxt": "^0.1.5",
     "convex-vue": "^0.1.5",

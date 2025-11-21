@@ -1,10 +1,14 @@
 package plaid
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"sort"
 	"strings"
@@ -30,7 +34,7 @@ var environments = map[string]plaid.Environment{
 	"production": plaid.Production,
 }
 
-func init(){
+func init() {
 	fmt.Println("Running here ")
 	// load env vars from .env file
 	err := godotenv.Load()
@@ -126,6 +130,8 @@ func GetAccessToken(c *fiber.Ctx) error {
 	fmt.Println("public token: " + body.PublicToken)
 	fmt.Println("access token: " + accessToken)
 	fmt.Println("item ID: " + itemID)
+
+	Accounts(c)
 
 	return c.JSON(fiber.Map{
 		"access_token": accessToken,
@@ -278,13 +284,15 @@ func Accounts(c *fiber.Ctx) error {
 	accountsGetResp, _, err := client.PlaidApi.AccountsGet(ctx).AccountsGetRequest(
 		// *plaid.NewAccountsGetRequest(accessToken),
 		// access-sandbox-3b63e2a9-1d22-4139-afd0-dda1b3bd07e8 -> USAA
-		*plaid.NewAccountsGetRequest(AMEX_TOKEN),
+		*plaid.NewAccountsGetRequest(accessToken),
 	).Execute()
 
 	if err != nil {
 		renderError(c, err)
 		return err
 	}
+
+	saveAccount(&accountsGetResp)
 
 	c.JSON(fiber.Map{
 		"accounts": accountsGetResp.GetAccounts(),
@@ -374,4 +382,108 @@ func Transactions(c *fiber.Ctx) error {
 		"latest_transactions": latestTransactions,
 	})
 	return nil
+}
+
+var CONVEX_URL = "https://sincere-walrus-627.convex.site"
+
+func saveAccount(accountsGetResp *plaid.AccountsGetResponse) {
+	jsonConvertedRes, err := json.Marshal(accountsGetResp)
+	if err != nil {
+		log.Fatalf("Failed to Serialize to JSON from native Go struct type: %v", err)
+	}
+
+	// here http.Post method expects body as 'io.Redear' which should implement Read() method.
+	// So, bytes package will take care of that.
+	url := fmt.Sprintf("%s/api/save", CONVEX_URL)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonConvertedRes))
+	if err != nil {
+		fmt.Println("Error creating request:", err)
+		return
+	}
+	// Set the Content-Type header to indicate that we are sending JSON
+	req.Header.Set("Content-Type", "application/json")
+
+	// Create an HTTP client
+	client := &http.Client{}
+
+	// Send the request
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error sending request:", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	// Check status code
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("Unexpected status code: %d\n", resp.StatusCode)
+		return
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error reading response body:", err)
+		return
+	}
+
+	// Define a struct to match the response format
+	type SaveResponse struct {
+		Message string `json:"message"`
+	}
+
+	// Parse the JSON response
+	var saveResp SaveResponse
+	if err := json.Unmarshal(body, &saveResp); err != nil {
+		fmt.Printf("Error parsing JSON response: %v\n", err)
+		fmt.Printf("Response body: %s\n", string(body))
+		return
+	}
+	fmt.Printf("Account saved successfully: %s\n", saveResp.Message)
+}
+
+type AccessTokenResponse struct {
+	AccessTokens []string `json:"access_tokens"`
+}
+
+func GetAllAccessTokens() (AccessTokenResponse, error) {
+	url := fmt.Sprintf("%s/api/access_token", CONVEX_URL)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		fmt.Println("Error creating request:", err)
+		return AccessTokenResponse{}, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+	fmt.Println(err)
+	if err != nil {
+		fmt.Println("Error sending request:", err)
+		return AccessTokenResponse{}, err
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("Unexpected status code: %d\n", resp.StatusCode)
+		return AccessTokenResponse{}, err
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error reading response body:", err)
+		return AccessTokenResponse{}, err
+	}
+
+	var accessTokenResponse AccessTokenResponse
+	if err := json.Unmarshal(body, &accessTokenResponse); err != nil {
+		fmt.Printf("Error parsing JSON response: %v\n", err)
+		fmt.Printf("Response body: %s\n", string(body))
+		return AccessTokenResponse{}, err
+	}
+
+	return accessTokenResponse, nil
+
 }

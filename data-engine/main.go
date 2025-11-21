@@ -11,7 +11,6 @@ import (
 	"github.com/jonaaldas/personal-finance-dashboard/plaid"
 )
 
-
 func main() {
 	app := fiber.New()
 	app.Use(logger.New())
@@ -54,6 +53,18 @@ func main() {
 		return plaid.Transactions(c)
 	})
 
+	app.Get("/api/access_tokens", func(c *fiber.Ctx) error {
+		res, err := plaid.GetAllAccessTokens()
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+		return c.JSON(fiber.Map{
+			"tokens": res.AccessTokens,
+		})
+	})
+
 	log.Fatal(app.Listen(":" + getPort()))
 }
 
@@ -64,4 +75,3 @@ func getPort() string {
 	}
 	return port
 }
-

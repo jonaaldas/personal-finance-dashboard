@@ -9,6 +9,9 @@
  */
 
 import type * as functions_mutation from "../functions/mutation.js";
+import type * as functions_queries from "../functions/queries.js";
+import type * as http from "../http.js";
+import type * as types from "../types.js";
 
 import type {
   ApiFromModules,
@@ -18,6 +21,9 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   "functions/mutation": typeof functions_mutation;
+  "functions/queries": typeof functions_queries;
+  http: typeof http;
+  types: typeof types;
 }>;
 
 /**
