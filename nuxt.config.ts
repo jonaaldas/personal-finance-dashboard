@@ -1,6 +1,6 @@
 import tailwindcss from "@tailwindcss/vite";
 import { env } from "./env";
-console.log(env);
+
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
@@ -20,4 +20,5 @@ export default defineNuxtConfig({
       DATASYNC_URL: env.DATASYNC_URL,
     },
   },
+  srr: false,
 });

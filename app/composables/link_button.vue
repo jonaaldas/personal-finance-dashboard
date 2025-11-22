@@ -40,6 +40,7 @@ const onSuccess: PlaidLinkOnSuccess = async (publicToken, metadata) => {
         },
       }
     );
+    console.log("res: ", res);
     saveAccessTokens({ access_token: res.access_token, item_id: res.item_id });
   } catch (error) {
     console.error("Error setting access token", error);

@@ -65,6 +65,14 @@ func main() {
 		})
 	})
 
+	app.Get("/api/investments", func(c *fiber.Ctx) error {
+		return plaid.Investments(c)
+	})
+
+	app.Get("/api/plaid_client", func(c *fiber.Ctx) error {
+		return plaid.CreatePlaidUser(c)
+	})
+
 	log.Fatal(app.Listen(":" + getPort()))
 }
 
